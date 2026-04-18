@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pushups</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #08080a;
+            --surface: #121217;
+            --accent-cyan: #00f2ff;
+            --accent-pink: #ff007a;
+            --text: #e0e0e0;
+            --border: #2d2d35;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Исправляем наложение форм */
+        .auth-page, .app-page { display: none; width: 100%; }
+        .auth-page.active, .app-page.active { display: block; }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+
+        /* AUTH CARD */
+        .auth-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--accent-cyan);
+            padding: 40px;
+            max-width: 400px;
+            margin: 0 auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+
+        .auth-title {
+            color: var(--accent-cyan);
+            text-align: center;
+            font-size: 24px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+        }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            background: #000;
+            border: 1px solid var(--border);
+            padding: 12px;
+            color: var(--accent-cyan);
+            outline: none;
+        }
+
+        .form-group input:focus { border-color: var(--accent-cyan); }
+
+        /* Кнопки */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            text-transform: uppercase;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent-pink);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #d10064;
+            box-shadow: 0 0 15px rgba(255, 0, 122, 0.4);
+        }
+
+        .toggle-form { text-align: center; margin-top: 20px; color: #555; font-size: 13px; }
+        .toggle-form button {
+            background: none; border: none; color: var(--accent-cyan); 
+            text-decoration: underline; cursor: pointer;
+        }
+
+        /* APP LAYOUT */
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        .app-header {
+            background: var(--surface);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2px;
+        }
+
+        .app-content {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 2px; /* Тонкие линии между блоками */
+        }
+
+        .chart-container, .sidebar > div {
+            background: var(--surface);
+            padding: 25px;
+        }
+
+        .sidebar { display: flex; flex-direction: column; gap: 2px; }
+
+        .leaderboard h3 { color: var(--accent-pink); margin-bottom: 15px; font-size: 16px; }
+
+        .leaderboard-item {
+            background: #1a1a21;
+            padding: 10px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            border-left: 2px solid var(--accent-cyan);
+        }
+
+        .btn-add {
+            background: var(--accent-cyan);
+            color: #000;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .user-badge { color: var(--accent-cyan); font-weight: bold; }
+        .btn-logout { background: none; border: 1px solid #444; color: #888; padding: 5px 10px; cursor: pointer; }
+
+        @media (max-width: 800px) { .app-content { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <!-- AUTH PAGE -->
+    <div class="auth-page active">
+        <div class="auth-container">
+            <div class="auth-title">Pushups</div>
+
+            <!-- Login Form -->
+            <form class="auth-form active" id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">Ник</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Пароль</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Вход</button>
+                <div id="loginError" class="error"></div>
+            </form>
+
+            <!-- Register Form -->
+            <form class="auth-form" id="registerForm">
+                <div class="form-group">
+                    <label for="registerUsername">Ник</label>
+                    <input type="text" id="registerUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Пароль</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                <div id="registerError" class="error"></div>
+            </form>
+
+            <div class="toggle-form">
+                <span id="toggleText">Нет аккаунта? </span>
+                <button type="button" id="toggleBtn">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP PAGE -->
+    <div class="app-page">
+        <div class="container">
+            <div class="app-header">
+                <h1>💪 PunkPushups</h1>
+                <div class="user-info">
+                    <div class="user-badge" id="currentUser"></div>
+                    <button class="btn-logout" onclick="logout()">Выход</button>
+                </div>
+            </div>
+            <div class="app-content">
+                <div>
+                    <div id="message"></div>
+                    <div class="chart-container">
+                        <canvas id="statsChart"></canvas>
+                    </div>
+                </div>
+                <div class="sidebar">
+                    <div class="add-pushups-form">
+                        <h3>Добавить отжимания</h3>
+                        <div class="form-group">
+                            <label for="pushupsCount">Количество</label>
+                            <input type="number" id="pushupsCount" min="1" value="10">
+                        </div>
+                        <button class="btn-add" onclick="addPushups()">Добавить</button>
+                    </div>
+
+                    <div class="leaderboard">
+                        <h3>Лидерборд</h3>
+                        <div id="leaderboard"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
