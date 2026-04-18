@@ -1,5 +1,5 @@
 while true; do
-    env $(cat .env | xargs) ./punkpushups
+    . ./.env
     ./punkpushups
     sleep 5
 done
