@@ -185,10 +185,13 @@ function updateChart() {
         });
         return {
             label: userStats.username,
-            data: sortedDates.map(date => dateMap[date] || null),
+            data: sortedDates.map(date => dateMap[date] || 0), // for line null, for bar 0
             borderColor: color,
-            backgroundColor: color + '20',
+            backgroundColor: color + '80', // for bar '80', for line '20'
             borderWidth: 2,
+            borderSkipped: false,
+/*
+// for line uncomment
             tension: 0.4,
             fill: true,
             pointRadius: 4,
@@ -197,6 +200,8 @@ function updateChart() {
             pointBorderWidth: 2,
             pointHoverRadius: 6,
             spanGaps: true
+// for line uncomment
+*/
         };
     });
 
@@ -205,7 +210,7 @@ function updateChart() {
     }
 
     chart = new Chart(ctx, {
-        type: 'line',
+        type: 'bar', // 'bar'/'line'
         data: {
             labels: sortedDates,
             datasets: datasets
