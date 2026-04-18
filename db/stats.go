@@ -21,7 +21,7 @@ func GetStats(days int) ([]domain.UserStats, error) {
 	SELECT
 		u.username,
 		date(p.created_at) as day,
-		SUM(SUM(p.count)) OVER (PARTITION BY u.id ORDER BY date(p.created_at)) as total
+		SUM(p.count) as total
 	FROM users u
 	JOIN pushups p ON u.id = p.user_id
 	` + timeFilter + `
