@@ -279,7 +279,7 @@ function updateLeaderboard() {
     const totals = allStats.map(stat => ({
         username: stat.username,
         color: stat.color,
-        total: stat.points.length > 0 ? stat.points[stat.points.length - 1].value : 0
+        total: stat.points.reduce(0, (acc, point) => acc + point.data),
     })).sort((a, b) => b.total - a.total);
 
     totals.forEach(item => {
