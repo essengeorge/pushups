@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8080';
+const API_URL = 'https://pushups.gveserver.ru';
 let chart = null;
 let allStats = [];
 let token = localStorage.getItem('token');
@@ -9,16 +9,16 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
-    
+
     try {
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.token) {
             localStorage.setItem('token', data.token);
             localStorage.setItem('username', username);
@@ -37,18 +37,18 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     e.preventDefault();
     const username = document.getElementById('registerUsername').value;
     const password = document.getElementById('registerPassword').value;
-    
+
     try {
         const response = await fetch(`${API_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.status === 'ok') {
-            document.getElementById('registerError').innerHTML = 
+            document.getElementById('registerError').innerHTML =
                 '<div class="success">Аккаунт создан! Теперь можно войти</div>';
             setTimeout(() => {
                 toggleForms();
@@ -69,7 +69,7 @@ function toggleForms() {
     document.getElementById('registerForm').classList.toggle('active');
     const toggleText = document.getElementById('toggleText');
     const toggleBtn = document.getElementById('toggleBtn');
-    
+
     if (document.getElementById('loginForm').classList.contains('active')) {
         toggleText.textContent = 'Нет аккаунта? ';
         toggleBtn.textContent = 'Создать';
@@ -86,6 +86,7 @@ function logout() {
     currentUsername = null;
     showAuth();
 }
+
 
 // ============= APP =============
 async function showApp() {
@@ -106,10 +107,10 @@ function showAuth() {
 
 async function addPushups() {
     if (!token) return;
-    
+
     const count = parseInt(document.getElementById('pushupsCount').value);
     if (!count || count < 1) return;
-    
+
     try {
         const response = await fetch(`${API_URL}/pushups`, {
             method: 'POST',
@@ -119,7 +120,7 @@ async function addPushups() {
             },
             body: JSON.stringify({ count })
         });
-        
+
         if (response.ok) {
             showMessage('✅ Отжимания добавлены!', 'success');
             document.getElementById('pushupsCount').value = '10';
@@ -134,12 +135,12 @@ async function addPushups() {
 
 async function loadStats() {
     if (!token) return;
-    
+
     try {
         const response = await fetch(`${API_URL}/stats`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (response.ok) {
             allStats = await response.json();
             updateChart();
@@ -153,18 +154,40 @@ async function loadStats() {
 }
 
 function updateChart() {
-    const ctx = document.getElementById('statsChart').getContext('2d');
-    
-    // Генерируем цвета для каждого пользователя
+    if (!allStats || allStats.length === 0) {
+        console.warn('Нет данных для графика');
+        return;
+    }
+
+    const ctx = document.getElementById('statsChart');
+    if (!ctx) {
+        console.error('Элемент #statsChart не найден');
+        return;
+    }
+
     const colors = generateColors(allStats.length);
-    
+
+    // Собираем все уникальные даты
+    const allDates = new Set();
+    allStats.forEach(stat => {
+        stat.points.forEach(point => {
+            allDates.add(point.date);
+        });
+    });
+    const sortedDates = Array.from(allDates).sort();
+
+    // Создаём датасеты
     const datasets = allStats.map((userStats, index) => {
         const color = userStats.color || colors[index];
+        const dateMap = {};
+        userStats.points.forEach(point => {
+            dateMap[point.date] = point.value;
+        });
         return {
             label: userStats.username,
-            data: userStats.points.map(p => p.value),
+            data: sortedDates.map(date => dateMap[date] || null),
             borderColor: color,
-            backgroundColor: color + '20', // 20% opacity
+            backgroundColor: color + '20',
             borderWidth: 2,
             tension: 0.4,
             fill: true,
@@ -172,27 +195,19 @@ function updateChart() {
             pointBackgroundColor: color,
             pointBorderColor: '#fff',
             pointBorderWidth: 2,
-            pointHoverRadius: 6
+            pointHoverRadius: 6,
+            spanGaps: true
         };
     });
-    
-    // Получаем уникальные даты
-    const allDates = new Set();
-    allStats.forEach(stat => {
-        stat.points.forEach(point => {
-            allDates.add(point.date);
-        });
-    });
-    const labels = Array.from(allDates).sort();
-    
+
     if (chart) {
         chart.destroy();
     }
-    
+
     chart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels,
+            labels: sortedDates,
             datasets: datasets
         },
         options: {
@@ -254,14 +269,14 @@ function updateChart() {
 function updateLeaderboard() {
     const leaderboard = document.getElementById('leaderboard');
     leaderboard.innerHTML = '';
-    
+
     // Считаем общее количество отжиманий для каждого пользователя
     const totals = allStats.map(stat => ({
         username: stat.username,
         color: stat.color,
-        total: stat.points.reduce((sum, p) => sum + p.value, 0)
+        total: stat.points.length > 0 ? stat.points[stat.points.length - 1].value : 0
     })).sort((a, b) => b.total - a.total);
-    
+
     totals.forEach(item => {
         const div = document.createElement('div');
         div.className = 'leaderboard-item';
@@ -279,7 +294,7 @@ function showMessage(text, type) {
     messageDiv.className = `message ${type}`;
     messageDiv.textContent = text;
     messageDiv.style.display = 'block';
-    
+
     setTimeout(() => {
         messageDiv.style.display = 'none';
     }, 3000);
@@ -300,9 +315,9 @@ if (token && currentUsername) {
     showAuth();
 }
 
-// Обновляем статистику каждые 10 секунд
+// Обновляем статистику каждые 60 секунд
 setInterval(() => {
     if (token) {
         loadStats();
     }
-}, 10000);
+}, 1 * 60 * 1000);
