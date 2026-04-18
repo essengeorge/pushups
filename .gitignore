@@ -33,6 +33,12 @@ go.work.sum
 
 # Output
 pushups
+punkpushups
 
 # DB
 pushups.db
+
+# macOS && vim trash
+.DS_Store
+._*
+*.swp
