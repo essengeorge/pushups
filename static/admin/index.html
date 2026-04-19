@@ -181,7 +181,9 @@
                 }
 
                 const data = await response.json();
-                return data.usernames || [];
+                // Преобразуем объект в массив
+                const usernames = Object.values(data);
+                return usernames;
             } catch (error) {
                 alert("Ошибка: " + error.message);
                 return [];
