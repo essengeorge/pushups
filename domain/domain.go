@@ -29,10 +29,10 @@ type UserStats struct {
 }
 
 type Friendship struct {
-	UserID int `json:"user_id"`
-	FriendID int `json:"friend_id"`
+	UserID   int    `json:"user_id"`
+	FriendID int    `json:"friend_id"`
 	Username string `json:"username,omitempty"`
-	Status string `json:"status"`
+	Status   string `json:"status"`
 }
 
 type FriendRequest struct {

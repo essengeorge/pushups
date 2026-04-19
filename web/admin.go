@@ -1,12 +1,21 @@
 package web
 
-
 import (
-	"net/http"
 	"encoding/json"
-    "punkpushups/db"
+	"net/http"
+	"punkpushups/db"
 )
 
+func GetBannedUsersHandler(w http.ResponseWriter, r *http.Request) {
+	list, err := db.GetBannedUsers()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	json.NewEncoder(w).Encode(list)
+}
 
 func GetPendingUsersHandler(w http.ResponseWriter, r *http.Request) {
 	list, err := db.GetPendingUsers()
@@ -19,6 +28,16 @@ func GetPendingUsersHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(list)
 }
 
+func GetApprovedUsersHandler(w http.ResponseWriter, r *http.Request) {
+	list, err := db.GetApprovedUsers()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	json.NewEncoder(w).Encode(list)
+}
 
 func ApproveUserHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -44,11 +63,10 @@ func ApproveUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	json.NewEncoder(w).Encode(map[string]string{
-		"status": "ok",
+		"status":  "ok",
 		"message": "User " + req.Username + " approved",
 	})
 }
-
 
 func BanUserHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -74,7 +92,7 @@ func BanUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	json.NewEncoder(w).Encode(map[string]string{
-		"status": "ok",
+		"status":  "ok",
 		"message": "User " + req.Username + " banned",
 	})
 }

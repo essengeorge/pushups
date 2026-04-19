@@ -46,7 +46,6 @@ func UserRoleByID(userID int) (string, error) {
 	return role, nil
 }
 
-
 func Authenticate(username, password string) (int, error) {
 	var id int
 	var hash string
@@ -61,8 +60,42 @@ func Authenticate(username, password string) (int, error) {
 	return id, nil
 }
 
+func GetBannedUsers() ([]string, error) {
+	rows, err := DB.Query("SELECT username FROM users WHERE is_approved = ?", codeBanned)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	usernames := []string{}
+	for rows.Next() {
+		var username string
+		if err := rows.Scan(&username); err != nil {
+			return nil, err
+		}
+		usernames = append(usernames, username)
+	}
+	return usernames, nil
+}
+
 func GetPendingUsers() ([]string, error) {
 	rows, err := DB.Query("SELECT username FROM users WHERE is_approved = ?", codePending)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	usernames := []string{}
+	for rows.Next() {
+		var username string
+		if err := rows.Scan(&username); err != nil {
+			return nil, err
+		}
+		usernames = append(usernames, username)
+	}
+	return usernames, nil
+}
+
+func GetApprovedUsers() ([]string, error) {
+	rows, err := DB.Query("SELECT username FROM users WHERE is_approved = ?", codeApproved)
 	if err != nil {
 		return nil, err
 	}

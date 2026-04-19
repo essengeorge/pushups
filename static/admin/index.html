@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <link rel="icon" type="image/png" href="/static/admin/favicon.png">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel</title>
@@ -18,8 +18,15 @@
     
     <div id="adminContainer" style="display:none;">
         <button onclick="logout()">Выход</button>
+
+        <h2>Banned Users</h2>
+        <div id="bannedContainer"></div>
+
         <h2>Pending Users</h2>
         <div id="usersContainer"></div>
+
+        <h2>Approved Users</h2>
+        <div id="approvedContainer"></div>
     </div>
 
     <script>
@@ -40,7 +47,7 @@
         function showAdminPanel() {
             document.getElementById("loginContainer").style.display = "none";
             document.getElementById("adminContainer").style.display = "block";
-            loadPendingUsers();
+            loadAllUsers();
         }
 
         function showLoginPanel() {
@@ -98,8 +105,7 @@
                 });
 
                 if (response.ok) {
-                    alert("Пользователь забанен");
-                    loadPendingUsers();
+                    loadAllUsers();
                 } else {
                     alert("Ошибка при бане");
                 }
@@ -133,8 +139,7 @@
                 });
 
                 if (response.ok) {
-                    alert("Пользователь одобрен");
-                    loadPendingUsers();
+                    loadAllUsers();
                 } else {
                     alert("Ошибка при одобрении");
                 }
@@ -166,6 +171,24 @@
             return div;
         }
 
+        function makeBannedUserDiv(username) {
+            let usernameDiv = document.createElement("div");
+            usernameDiv.textContent = username;
+            let div = document.createElement("div");
+            div.appendChild(usernameDiv);
+            div.appendChild(makeApproveBtn(username));
+            return div;
+        }
+
+        function makeApprovedUserDiv(username) {
+            let usernameDiv = document.createElement("div");
+            usernameDiv.textContent = username;
+            let div = document.createElement("div");
+            div.appendChild(usernameDiv);
+            div.appendChild(makeBanBtn(username));
+            return div;
+        }
+
         async function getPendingUsers() {
             try {
                 const response = await fetch(API_URL + "/admin/pending", {
@@ -176,16 +199,55 @@
                 });
 
                 if (!response.ok) {
-                    alert("Ошибка загрузки пользователей");
                     return [];
                 }
 
                 const data = await response.json();
-                // Преобразуем объект в массив
                 const usernames = Object.values(data);
                 return usernames;
             } catch (error) {
-                alert("Ошибка: " + error.message);
+                return [];
+            }
+        }
+
+        async function getBannedUsers() {
+            try {
+                const response = await fetch(API_URL + "/admin/banned", {
+                    method: "GET",
+                    headers: {
+                        "Authorization": "Bearer " + getToken()
+                    }
+                });
+
+                if (!response.ok) {
+                    return [];
+                }
+
+                const data = await response.json();
+                const usernames = Object.values(data);
+                return usernames;
+            } catch (error) {
+                return [];
+            }
+        }
+
+        async function getApprovedUsers() {
+            try {
+                const response = await fetch(API_URL + "/admin/approved", {
+                    method: "GET",
+                    headers: {
+                        "Authorization": "Bearer " + getToken()
+                    }
+                });
+
+                if (!response.ok) {
+                    return [];
+                }
+
+                const data = await response.json();
+                const usernames = Object.values(data);
+                return usernames;
+            } catch (error) {
                 return [];
             }
         }
@@ -205,7 +267,42 @@
             });
         }
 
-        // Проверяем есть ли уже токен при загрузке страницы
+        async function loadBannedUsers() {
+            const usernames = await getBannedUsers();
+            const container = document.getElementById("bannedContainer");
+            container.innerHTML = "";
+
+            if (usernames.length === 0) {
+                container.textContent = "Нет забаненных пользователей";
+                return;
+            }
+
+            usernames.forEach(username => {
+                container.appendChild(makeBannedUserDiv(username));
+            });
+        }
+
+        async function loadApprovedUsers() {
+            const usernames = await getApprovedUsers();
+            const container = document.getElementById("approvedContainer");
+            container.innerHTML = "";
+
+            if (usernames.length === 0) {
+                container.textContent = "Нет одобренных пользователей";
+                return;
+            }
+
+            usernames.forEach(username => {
+                container.appendChild(makeApprovedUserDiv(username));
+            });
+        }
+
+        async function loadAllUsers() {
+            await loadBannedUsers();
+            await loadPendingUsers();
+            await loadApprovedUsers();
+        }
+
         if (getToken()) {
             showAdminPanel();
         }
