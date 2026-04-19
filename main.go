@@ -38,7 +38,7 @@ func main() {
 	adminFileServer := http.FileServer(http.Dir("./static/admin"))
 	mux.Handle("GET /static/admin", http.StripPrefix("/static/admin", adminFileServer))
 	mux.HandleFunc("GET /admin", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./static/index.html")
+		http.ServeFile(w, r, "./static/admin/index.html")
 	})
 	mux.HandleFunc("POST /register", web.RegisterHandler)
 	mux.HandleFunc("POST /login", web.LoginHandler)
