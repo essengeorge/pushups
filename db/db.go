@@ -17,7 +17,9 @@ func InitDB(path string) error {
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		username TEXT UNIQUE,
-		password_hash TEXT
+		password_hash TEXT,
+		is_approved INTEGER DEFAULT 0,
+		role TEXT DEFAULT 'user'
 	);
 
 	CREATE TABLE IF NOT EXISTS pushups (

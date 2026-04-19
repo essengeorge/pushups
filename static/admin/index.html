@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+</head>
+<body>
+    <h1>Admin Panel</h1>
+    
+    <div id="loginContainer">
+        <h2>Вход</h2>
+        <input type="text" id="username" placeholder="Логин">
+        <input type="password" id="password" placeholder="Пароль">
+        <button onclick="login()">Войти</button>
+    </div>
+    
+    <div id="adminContainer" style="display:none;">
+        <button onclick="logout()">Выход</button>
+        <h2>Pending Users</h2>
+        <div id="usersContainer"></div>
+    </div>
+
+    <script>
+        const API_URL = "https://pushups.gveserver.ru";
+
+        function getToken() {
+            return localStorage.getItem("token");
+        }
+
+        function setToken(token) {
+            localStorage.setItem("token", token);
+        }
+
+        function clearToken() {
+            localStorage.removeItem("token");
+        }
+
+        function showAdminPanel() {
+            document.getElementById("loginContainer").style.display = "none";
+            document.getElementById("adminContainer").style.display = "block";
+            loadPendingUsers();
+        }
+
+        function showLoginPanel() {
+            document.getElementById("loginContainer").style.display = "block";
+            document.getElementById("adminContainer").style.display = "none";
+        }
+
+        async function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            if (!username || !password) {
+                alert("Введите логин и пароль");
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL + "/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!response.ok) {
+                    alert("Неверные учетные данные");
+                    return;
+                }
+
+                const data = await response.json();
+                setToken(data.token);
+                document.getElementById("username").value = "";
+                document.getElementById("password").value = "";
+                showAdminPanel();
+            } catch (error) {
+                alert("Ошибка: " + error.message);
+            }
+        }
+
+        function logout() {
+            clearToken();
+            showLoginPanel();
+        }
+
+        async function ban(username) {
+            try {
+                const response = await fetch(API_URL + "/admin/ban", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + getToken()
+                    },
+                    body: JSON.stringify({ username })
+                });
+
+                if (response.ok) {
+                    alert("Пользователь забанен");
+                    loadPendingUsers();
+                } else {
+                    alert("Ошибка при бане");
+                }
+            } catch (error) {
+                alert("Ошибка: " + error.message);
+            }
+        }
+
+        function banDecorator(username) {
+            return function() {
+                ban(username);
+            };
+        }
+
+        function makeBanBtn(username) {
+            let btn = document.createElement("button");
+            btn.textContent = "ban";
+            btn.onclick = banDecorator(username);
+            return btn;
+        }
+
+        async function approve(username) {
+            try {
+                const response = await fetch(API_URL + "/admin/approve", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + getToken()
+                    },
+                    body: JSON.stringify({ username })
+                });
+
+                if (response.ok) {
+                    alert("Пользователь одобрен");
+                    loadPendingUsers();
+                } else {
+                    alert("Ошибка при одобрении");
+                }
+            } catch (error) {
+                alert("Ошибка: " + error.message);
+            }
+        }
+
+        function approveDecorator(username) {
+            return function() {
+                approve(username);
+            };
+        }
+
+        function makeApproveBtn(username) {
+            let btn = document.createElement("button");
+            btn.textContent = "approve";
+            btn.onclick = approveDecorator(username);
+            return btn;
+        }
+
+        function makeUserDiv(username) {
+            let usernameDiv = document.createElement("div");
+            usernameDiv.textContent = username;
+            let div = document.createElement("div");
+            div.appendChild(usernameDiv);
+            div.appendChild(makeBanBtn(username));
+            div.appendChild(makeApproveBtn(username));
+            return div;
+        }
+
+        async function getPendingUsers() {
+            try {
+                const response = await fetch(API_URL + "/admin/pending", {
+                    method: "GET",
+                    headers: {
+                        "Authorization": "Bearer " + getToken()
+                    }
+                });
+
+                if (!response.ok) {
+                    alert("Ошибка загрузки пользователей");
+                    return [];
+                }
+
+                const data = await response.json();
+                return data.usernames || [];
+            } catch (error) {
+                alert("Ошибка: " + error.message);
+                return [];
+            }
+        }
+
+        async function loadPendingUsers() {
+            const usernames = await getPendingUsers();
+            const container = document.getElementById("usersContainer");
+            container.innerHTML = "";
+
+            if (usernames.length === 0) {
+                container.textContent = "Нет ожидающих пользователей";
+                return;
+            }
+
+            usernames.forEach(username => {
+                container.appendChild(makeUserDiv(username));
+            });
+        }
+
+        // Проверяем есть ли уже токен при загрузке страницы
+        if (getToken()) {
+            showAdminPanel();
+        }
+    </script>
+</body>
+</html>

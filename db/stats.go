@@ -13,9 +13,9 @@ func AddPushups(userID int, count int) error {
 }
 
 func GetStats(days int) ([]domain.UserStats, error) {
-	timeFilter := ""
+	whereFilter := " WHERE u.is_approved = 1 "
 	if days > 0 {
-		timeFilter = "WHERE p.created_at >= date('now', '-" + strconv.Itoa(days) + " days')"
+		whereFilter += " AND p.created_at >= date('now', '-" + strconv.Itoa(days) + " days') "
 	}
 	query := `
 	SELECT
@@ -24,7 +24,7 @@ func GetStats(days int) ([]domain.UserStats, error) {
 		SUM(p.count) as total
 	FROM users u
 	JOIN pushups p ON u.id = p.user_id
-	` + timeFilter + `
+	` + whereFilter + `
 	GROUP BY u.id, day
 	ORDER BY day ASC
 	`
