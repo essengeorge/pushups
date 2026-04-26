@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8080';
+const API_URL = 'https://pushups.gveserver.ru';
 let chart = null;
 let allStats = [];
 let token = localStorage.getItem('token');
