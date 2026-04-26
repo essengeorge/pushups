@@ -1,4 +1,4 @@
-const API_URL = 'https://pushups.gveserver.ru';
+const API_URL = 'http://localhost:8080';
 let chart = null;
 let allStats = [];
 let token = localStorage.getItem('token');
@@ -94,6 +94,7 @@ async function showApp() {
     document.querySelector('.app-page').classList.add('active');
     document.getElementById('currentUser').textContent = currentUsername;
     await loadStats();
+    await loadFriends();
 }
 
 function showAuth() {
@@ -313,6 +314,328 @@ function generateColors(count) {
     return hues.map(hue => `hsl(${hue}, 70%, 50%)`);
 }
 
+function makeBtn(text, fn) {
+    const btn = document.createElement('button');
+    btn.className = 'add-btn';
+    btn.innerText = text;
+    btn.onclick = fn;
+    return btn;
+}
+
+async function loadFriends() {
+    if (!token) return;
+
+    try {
+        // Загружаем список друзей
+        const friendsRes = await fetch(`${API_URL}/friends/list`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (friendsRes.ok) {
+            const friends = await friendsRes.json();
+            document.getElementById('friendsFriends').innerHTML = '<div class="panel-title">🤝Friends</div>';
+            if (friends && friends.length > 0) {
+                friends.forEach(f => addFriendDiv(f.username));
+            }
+        }
+
+        // Входящие запросы
+        const incomingRes = await fetch(`${API_URL}/friends/incoming`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (incomingRes.ok) {
+            const incoming = await incomingRes.json();
+            document.getElementById('friendsIncoming').innerHTML = '<div class="panel-title">📥Incoming</div>';
+            if (incoming && incoming.length > 0) {
+                incoming.forEach(req => addIncomingDiv(req.username));
+            }
+        }
+
+        // Исходящие запросы
+        const outgoingRes = await fetch(`${API_URL}/friends/outgoing`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (outgoingRes.ok) {
+            const outgoing = await outgoingRes.json();
+            document.getElementById('friendsPending').innerHTML = '<div class="panel-title">⏳Pending</div>';
+            if (outgoing && outgoing.length > 0) {
+                outgoing.forEach(req => addPendingDiv(req.username));
+            }
+        }
+
+        // Заблокированные
+        const blockedRes = await fetch(`${API_URL}/friends/blocked`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (blockedRes.ok) {
+            const blocked = await blockedRes.json();
+            document.getElementById('friendsBlocked').innerHTML = '<div class="panel-title">🚫Blocked</div>';
+            if (blocked && blocked.length > 0) {
+                blocked.forEach(u => addBlockedDiv(u.username));
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки друзей:', error);
+    }
+}
+
+async function removeFriend(username) {
+    if (!token) return;
+    try {
+        const response = await fetch(`${API_URL}/friends/remove`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ target_username: username })
+        });
+        if (response.ok) {
+            showMessage('✅ Друг удален', 'success');
+            document.getElementById(username).remove();
+        }
+    } catch (error) {
+        showMessage('❌ Ошибка', 'error');
+    }
+}
+
+async function blockUser(username) {
+    if (!token) return;
+    try {
+        const response = await fetch(`${API_URL}/friends/block`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ target_username: username })
+        });
+        if (response.ok) {
+            showMessage('✅ Пользователь заблокирован', 'success');
+            document.getElementById(username).remove();
+            await loadFriends();
+        }
+    } catch (error) {
+        showMessage('❌ Ошибка', 'error');
+    }
+}
+
+async function acceptRequest(username) {
+    if (!token) return;
+    try {
+        const response = await fetch(`${API_URL}/friends/accept`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ target_username: username })
+        });
+        if (response.ok) {
+            showMessage('✅ Запрос принят', 'success');
+            document.getElementById(username).remove();
+            await loadFriends();
+        }
+    } catch (error) {
+        showMessage('❌ Ошибка', 'error');
+    }
+}
+
+async function rejectRequest(username) {
+    if (!token) return;
+    try {
+        const response = await fetch(`${API_URL}/friends/reject`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ target_username: username })
+        });
+        if (response.ok) {
+            showMessage('✅ Запрос отклонен', 'success');
+            document.getElementById(username).remove();
+        }
+    } catch (error) {
+        showMessage('❌ Ошибка', 'error');
+    }
+}
+
+async function removeRequest(username) {
+    if (!token) return;
+    try {
+        const response = await fetch(`${API_URL}/friends/reject`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ target_username: username })
+        });
+        if (response.ok) {
+            showMessage('✅ Запрос отменен', 'success');
+            document.getElementById(username).remove();
+        }
+    } catch (error) {
+        showMessage('❌ Ошибка', 'error');
+    }
+}
+
+async function unblockUser(username) {
+    if (!token) return;
+    try {
+        const response = await fetch(`${API_URL}/friends/unblock`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ target_username: username })
+        });
+        if (response.ok) {
+            showMessage('✅ Пользователь разблокирован', 'success');
+            document.getElementById(username).remove();
+            await loadFriends();
+        }
+    } catch (error) {
+        showMessage('❌ Ошибка', 'error');
+    }
+}
+
+
+// Заменить последние 4 строки на:
+// (они удалят тестовые друзей и загрузят реальных)
+
+async function sendFriendRequest() {
+    if (!token) return;
+
+    const target_username = document.getElementById('friendName').value;
+    if (!target_username) return;
+
+    try {
+        const response = await fetch(`${API_URL}/friends/send`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ target_username })
+        });
+
+        if (response.ok) {
+            showMessage('✅ Запрос отправлен!', 'success');
+            document.getElementById('friendName').value = '';
+            await loadStats();
+        } else {
+            showMessage('❌ Ошибка при добавлении', 'error');
+        }
+    } catch (error) {
+        showMessage('❌ Ошибка сети', 'error');
+    }
+}
+
+async function acceptRequest(target_username) {
+    if (!token) return;
+
+    if (!target_username) return;
+
+    try {
+        const response = await fetch(`${API_URL}/friends/accept`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ target_username })
+        });
+
+        if (response.ok) {
+            showMessage('✅ Запрос отправлен!', 'success');
+            document.getElementById('friendName').value = '';
+            await loadStats();
+        } else {
+            showMessage('❌ Ошибка при добавлении', 'error');
+        }
+    } catch (error) {
+        showMessage('❌ Ошибка сети', 'error');
+    }
+}
+
+function addFriendDiv(username) {
+    const div = document.createElement('div');
+    div.className = 'leaderboard-item';
+    div.id = username;
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'leaderboard-name';
+    nameDiv.textContent = username;
+    div.appendChild(nameDiv);
+    const removeBtn = makeBtn('Remove', () => {
+        removeFriend(username);
+    });
+    div.appendChild(removeBtn);
+    const blockBtn = makeBtn('Block', () => {
+        blockUser(username);
+    });
+    div.appendChild(blockBtn);
+    div.style.marginTop = '15px';
+    document.getElementById('friendsFriends').appendChild(div);
+}
+
+function addIncomingDiv(username) {
+    const div = document.createElement('div');
+    div.className = 'leaderboard-item';
+    div.id = username;
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'leaderboard-name';
+    nameDiv.textContent = username;
+    div.appendChild(nameDiv);
+    const acceptBtn = makeBtn('Accept', () => {
+        acceptRequest(username);
+    });
+    div.appendChild(acceptBtn);
+    const rejectBtn = makeBtn('Reject', () => {
+        rejectRequest(username);
+    });
+    div.appendChild(rejectBtn);
+    const blockBtn = makeBtn('Block', () => {
+        blockUser(username);
+    });
+    div.appendChild(blockBtn);
+    div.style.marginTop = '15px';
+    document.getElementById('friendsIncoming').appendChild(div);
+}
+
+function addPendingDiv(username) {
+    const div = document.createElement('div');
+    div.className = 'leaderboard-item';
+    div.id = username;
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'leaderboard-name';
+    nameDiv.textContent = username;
+    div.appendChild(nameDiv);
+    const removeReqBtn = makeBtn('Remove request', () => {
+        removeRequest(username);
+    });
+    div.appendChild(removeReqBtn);
+    div.style.marginTop = '15px';
+    document.getElementById('friendsPending').appendChild(div);
+}
+
+function addBlockedDiv(username) {
+    const div = document.createElement('div');
+    div.className = 'leaderboard-item';
+    div.id = username;
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'leaderboard-name';
+    nameDiv.textContent = username;
+    div.appendChild(nameDiv);
+    const unblockBtn = makeBtn('Unblock', () => {
+        unblockUser(username);
+    });
+    div.appendChild(unblockBtn);
+    div.style.marginTop = '15px';
+    document.getElementById('friendsBlocked').appendChild(div);
+}
+
 // ============= INIT =============
 if (token && currentUsername) {
     showApp();
@@ -326,3 +649,8 @@ setInterval(() => {
         loadStats();
     }
 }, 1 * 60 * 1000);
+
+addFriendDiv('Лёша');
+addIncomingDiv('Коля');
+addPendingDiv('Ваня');
+addBlockedDiv('Дима');

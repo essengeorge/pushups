@@ -28,6 +28,18 @@ func InitDB(path string) error {
 		count INTEGER,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY(user_id) REFERENCES users(id)
+	);
+
+	CREATE TABLE IF NOT EXISTS friendships (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		requester_id INTEGER NOT NULL,
+		recipient_id INTEGER NOT NULL,
+		status INTEGER DEFAULT 0,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY(requester_id) REFERENCES users(id),
+		FOREIGN KEY(recipient_id) REFERENCES users(id),
+		UNIQUE(requester_id, recipient_id)
 	);`
 	_, err = DB.Exec(query)
 	return err

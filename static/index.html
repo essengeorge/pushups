@@ -302,7 +302,7 @@
             gap: 10px;
         }
 
-        #pushupsCount {
+        .input-field {
             flex: 1;
             padding: 14px;
             background: rgba(0, 255, 136, 0.05);
@@ -438,6 +438,13 @@
             margin-top: 10px;
         }
 
+        .friends-buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 200px;
+        }
+
         .message {
             position: fixed;
             top: 20px;
@@ -554,7 +561,7 @@
                 <div class="header-title">⚡ PUSHUPS TRACKER</div>
                 <div class="header-user">
                     <div class="user-info">
-                        <div class="user-label">Пользователь</div>
+                        <div class="user-label">User</div>
                         <div id="currentUser">-</div>
                     </div>
                     <button class="logout-btn" onclick="logout()">Выход</button>
@@ -565,26 +572,47 @@
             <div class="content">
                 <!-- PUSHUPS INPUT PANEL -->
                 <div class="panel">
-                    <div class="panel-title">💪 Добавить отжимания</div>
+                    <div class="panel-title">💪 Add pushups</div>
                     <div class="pushups-section">
                         <div class="pushups-input-group">
-                            <input type="number" id="pushupsCount" placeholder="10" min="1" value="10">
-                            <button class="add-btn" onclick="addPushups()">Добавить</button>
+                            <input type="number" class="input-field" id="pushupsCount" placeholder="10" min="1" value="10">
+                            <button class="add-btn" onclick="addPushups()">Add</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- LEADERBOARD PANEL -->
                 <div class="panel">
-                    <div class="panel-title">🏆 Таблица лидеров</div>
+                    <div class="panel-title">🏆 Leaderboard</div>
                     <div id="leaderboard" class="leaderboard"></div>
                 </div>
 
                 <!-- CHART PANEL -->
                 <div class="panel wide">
-                    <div class="panel-title">📊 График</div>
+                    <div class="panel-title">📊 Chart</div>
                     <div class="chart-container">
                         <canvas id="statsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- FRIENDS PANEL -->
+                <div class="panel">
+                    <div class="panel-title">🌐 Social</div>
+                    <div class="pushups-input-group">
+                        <input type="text" class="input-field" id="friendName" placeholder="Friend123">
+                        <button class="add-btn" onclick="sendFriendRequest()">Add</button>
+                    </div>
+                    <br><div class="panel" id="friendsFriends">
+                        <div class="panel-title">🤝 Friends</div>
+                    </div>
+                    <br><div class="panel" id="friendsIncoming">
+                        <div class="panel-title">📥 Incoming</div>
+                    </div>
+                    <br><div class="panel" id="friendsPending">
+                        <div class="panel-title">⏳ Pending</div>
+                    </div>
+                    <br><div class="panel" id="friendsBlocked">
+                        <div class="panel-title">🚫 Blocked</div>
                     </div>
                 </div>
             </div>

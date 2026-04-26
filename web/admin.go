@@ -13,7 +13,6 @@ func GetBannedUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	json.NewEncoder(w).Encode(list)
 }
 
@@ -24,7 +23,6 @@ func GetPendingUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	json.NewEncoder(w).Encode(list)
 }
 
@@ -35,7 +33,6 @@ func GetApprovedUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	json.NewEncoder(w).Encode(list)
 }
 
@@ -61,7 +58,6 @@ func ApproveUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	json.NewEncoder(w).Encode(map[string]string{
 		"status":  "ok",
 		"message": "User " + req.Username + " approved",
@@ -90,7 +86,6 @@ func BanUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	json.NewEncoder(w).Encode(map[string]string{
 		"status":  "ok",
 		"message": "User " + req.Username + " banned",

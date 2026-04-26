@@ -6,7 +6,7 @@ SERVICE_NAME=pushups.service
 
 build:
 	@echo "--- Сборка проекта... ---"
-	go build -o $(BINARY_PATH) ./cmd/main.go
+	go build -o $(BINARY_PATH) .
 	@echo "Готово: $(BINARY_PATH)"
 
 restart:

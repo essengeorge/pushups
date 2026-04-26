@@ -1,6 +1,9 @@
 package db
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"errors"
+	"golang.org/x/crypto/bcrypt"
+)
 
 const (
 	codeBanned   = -1
@@ -26,6 +29,15 @@ func BanUser(username string) error {
 func ApproveUser(username string) error {
 	_, err := DB.Exec("UPDATE users SET is_approved = ? WHERE username = ?", codeApproved, username)
 	return err
+}
+
+func UserID(username string) (int, error) {
+	var id int
+	err := DB.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 func UserRole(username string) (string, error) {
@@ -60,8 +72,11 @@ func Authenticate(username, password string) (int, error) {
 	return id, nil
 }
 
-func GetBannedUsers() ([]string, error) {
-	rows, err := DB.Query("SELECT username FROM users WHERE is_approved = ?", codeBanned)
+func getUsersWithCode(code int) ([]string, error) {
+	if code != codeBanned && code != codePending && code != codeApproved {
+		return nil, errors.New("invalid code")
+	}
+	rows, err := DB.Query("SELECT username FROM users WHERE is_approved = ?", code)
 	if err != nil {
 		return nil, err
 	}
@@ -75,38 +90,16 @@ func GetBannedUsers() ([]string, error) {
 		usernames = append(usernames, username)
 	}
 	return usernames, nil
+}
+
+func GetBannedUsers() ([]string, error) {
+	return getUsersWithCode(codeBanned)
 }
 
 func GetPendingUsers() ([]string, error) {
-	rows, err := DB.Query("SELECT username FROM users WHERE is_approved = ?", codePending)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	usernames := []string{}
-	for rows.Next() {
-		var username string
-		if err := rows.Scan(&username); err != nil {
-			return nil, err
-		}
-		usernames = append(usernames, username)
-	}
-	return usernames, nil
+	return getUsersWithCode(codePending)
 }
 
 func GetApprovedUsers() ([]string, error) {
-	rows, err := DB.Query("SELECT username FROM users WHERE is_approved = ?", codeApproved)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	usernames := []string{}
-	for rows.Next() {
-		var username string
-		if err := rows.Scan(&username); err != nil {
-			return nil, err
-		}
-		usernames = append(usernames, username)
-	}
-	return usernames, nil
+	return getUsersWithCode(codeApproved)
 }
