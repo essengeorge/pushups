@@ -55,8 +55,8 @@ func ApprovedMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		userRole, err := db.UserRoleByID(userID)
-		if err != nil || userRole != "admin" {
+		isApproved, err := db.IsApproved(userID)
+		if err != nil || !isApproved {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -71,8 +71,8 @@ func AdminMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		isApproved, err := db.IsApproved(userID)
-		if err != nil || !isApproved {
+		userRole, err := db.UserRoleByID(userID)
+		if err != nil || userRole != "admin" {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
