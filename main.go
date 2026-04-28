@@ -37,55 +37,55 @@ func main() {
 	mux.HandleFunc("POST /login", web.LoginHandler)
 
 	getStatsHandler := http.HandlerFunc(web.GetStatsHandler)
-	mux.Handle("GET /stats", web.AuthMiddleware(getStatsHandler))
+	mux.Handle("GET /stats", web.AuthMiddleware(web.ApprovedMiddleware(getStatsHandler)))
 
 	pushupsHandler := http.HandlerFunc(web.AddPushupsHandler)
-	mux.Handle("POST /pushups", web.AuthMiddleware(pushupsHandler))
+	mux.Handle("POST /pushups", web.AuthMiddleware(web.ApprovedMiddleware(pushupsHandler)))
 
 	sendFriendRequestHandler := http.HandlerFunc(web.SendFriendRequestHandler)
-	mux.Handle("POST /friends/send", web.AuthMiddleware(sendFriendRequestHandler))
+	mux.Handle("POST /friends/send", web.AuthMiddleware(web.ApprovedMiddleware(sendFriendRequestHandler)))
 
 	acceptFriendRequestHandler := http.HandlerFunc(web.AcceptFriendRequestHandler)
-	mux.Handle("POST /friends/accept", web.AuthMiddleware(acceptFriendRequestHandler))
+	mux.Handle("POST /friends/accept", web.AuthMiddleware(web.ApprovedMiddleware(acceptFriendRequestHandler)))
 
 	rejectFriendRequestHandler := http.HandlerFunc(web.RejectFriendRequestHandler)
-	mux.Handle("POST /friends/reject", web.AuthMiddleware(rejectFriendRequestHandler))
+	mux.Handle("POST /friends/reject", web.AuthMiddleware(web.ApprovedMiddleware(rejectFriendRequestHandler)))
 
 	blockUserHandler := http.HandlerFunc(web.BlockUserHandler)
-	mux.Handle("POST /friends/block", web.AuthMiddleware(blockUserHandler))
+	mux.Handle("POST /friends/block", web.AuthMiddleware(web.ApprovedMiddleware(blockUserHandler)))
 
 	unblockUserHandler := http.HandlerFunc(web.UnblockUserHandler)
-	mux.Handle("POST /friends/unblock", web.AuthMiddleware(unblockUserHandler))
+	mux.Handle("POST /friends/unblock", web.AuthMiddleware(web.ApprovedMiddleware(unblockUserHandler)))
 
 	removeFriendHandler := http.HandlerFunc(web.RemoveFriendHandler)
-	mux.Handle("POST /friends/remove", web.AuthMiddleware(removeFriendHandler))
+	mux.Handle("POST /friends/remove", web.AuthMiddleware(web.ApprovedMiddleware(removeFriendHandler)))
 
 	getIncomingRequestsHandler := http.HandlerFunc(web.GetIncomingRequestsHandler)
-	mux.Handle("GET /friends/incoming", web.AuthMiddleware(getIncomingRequestsHandler))
+	mux.Handle("GET /friends/incoming", web.AuthMiddleware(web.ApprovedMiddleware(getIncomingRequestsHandler)))
 
 	getOutgoingRequestsHandler := http.HandlerFunc(web.GetOutgoingRequestsHandler)
-	mux.Handle("GET /friends/outgoing", web.AuthMiddleware(getOutgoingRequestsHandler))
+	mux.Handle("GET /friends/outgoing", web.AuthMiddleware(web.ApprovedMiddleware(getOutgoingRequestsHandler)))
 
 	getBlockedUsersHandler := http.HandlerFunc(web.GetBlockedUsersHandler)
-	mux.Handle("GET /friends/blocked", web.AuthMiddleware(getBlockedUsersHandler))
+	mux.Handle("GET /friends/blocked", web.AuthMiddleware(web.ApprovedMiddleware(getBlockedUsersHandler)))
 
 	getFriendsHandler := http.HandlerFunc(web.GetFriendsHandler)
-	mux.Handle("GET /friends/list", web.AuthMiddleware(getFriendsHandler))
+	mux.Handle("GET /friends/list", web.AuthMiddleware(web.ApprovedMiddleware(getFriendsHandler)))
 
 	bannedHandler := http.HandlerFunc(web.GetBannedUsersHandler)
-	mux.Handle("GET /admin/banned", web.AuthMiddleware(web.AdminMiddleware(bannedHandler)))
+	mux.Handle("GET /admin/banned", web.AuthMiddleware(web.ApprovedMiddleware(web.AdminMiddleware(bannedHandler))))
 
 	pendingHandler := http.HandlerFunc(web.GetPendingUsersHandler)
-	mux.Handle("GET /admin/pending", web.AuthMiddleware(web.AdminMiddleware(pendingHandler)))
+	mux.Handle("GET /admin/pending", web.AuthMiddleware(web.ApprovedMiddleware(web.AdminMiddleware(pendingHandler))))
 
 	approvedHandler := http.HandlerFunc(web.GetApprovedUsersHandler)
-	mux.Handle("GET /admin/approved", web.AuthMiddleware(web.AdminMiddleware(approvedHandler)))
+	mux.Handle("GET /admin/approved", web.AuthMiddleware(web.ApprovedMiddleware(web.AdminMiddleware(approvedHandler))))
 
 	approveHandler := http.HandlerFunc(web.ApproveUserHandler)
-	mux.Handle("POST /admin/approve", web.AuthMiddleware(web.AdminMiddleware(approveHandler)))
+	mux.Handle("POST /admin/approve", web.AuthMiddleware(web.ApprovedMiddleware(web.AdminMiddleware(approveHandler))))
 
 	banHandler := http.HandlerFunc(web.BanUserHandler)
-	mux.Handle("POST /admin/ban", web.AuthMiddleware(web.AdminMiddleware(banHandler)))
+	mux.Handle("POST /admin/ban", web.AuthMiddleware(web.ApprovedMiddleware(web.AdminMiddleware(banHandler))))
 
 	handler := web.CorsMiddleware(mux)
 	log.Println("Server started on :8080")

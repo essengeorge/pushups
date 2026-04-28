@@ -48,7 +48,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func AdminMiddleware(next http.Handler) http.Handler {
+func ApprovedMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := r.Context().Value(userIDKey).(int)
 		if !ok {
@@ -57,6 +57,22 @@ func AdminMiddleware(next http.Handler) http.Handler {
 		}
 		userRole, err := db.UserRoleByID(userID)
 		if err != nil || userRole != "admin" {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func AdminMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID, ok := r.Context().Value(userIDKey).(int)
+		if !ok {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		isApproved, err := db.IsApproved(userID)
+		if err != nil || !isApproved {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}

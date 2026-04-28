@@ -80,7 +80,6 @@ func GetStatsByUserAndFriends(userID int, days int) ([]domain.UserStats, error) 
 	return result, nil
 }
 
-
 /*
 // public graph, unsafe
 func GetStats(days int) ([]domain.UserStats, error) {

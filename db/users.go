@@ -72,6 +72,22 @@ func Authenticate(username, password string) (int, error) {
 	return id, nil
 }
 
+func checkUserCode(userID int, code int) (bool, error) {
+	if code != codeBanned && code != codePending && code != codeApproved {
+		return false, errors.New("invalid code")
+	}
+	var userCode int
+	err := DB.QueryRow("SELECT is_approved FROM users WHERE id = ?", userID).Scan(&userCode)
+	if err != nil {
+		return false, err
+	}
+	return (userCode == code), nil
+}
+
+func IsApproved(userID int) (bool, error) {
+	return checkUserCode(userID, codeApproved)
+}
+
 func getUsersWithCode(code int) ([]string, error) {
 	if code != codeBanned && code != codePending && code != codeApproved {
 		return nil, errors.New("invalid code")
