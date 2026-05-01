@@ -70,55 +70,49 @@ func RemoveFriend(userID, friendID int) error {
 	return err
 }
 
+func queryFriendships(query string, args ...any) ([]domain.Friendship, error) {
+	rows, err := DB.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var friendships []domain.Friendship
+	for rows.Next() {
+		var f domain.Friendship
+		if err := rows.Scan(&f.UserID, &f.FriendID, &f.Username, &f.Status); err != nil {
+			return nil, err
+		}
+		friendships = append(friendships, f)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return friendships, nil
+}
+
 func GetIncomingRequests(userID int) ([]domain.Friendship, error) {
-	rows, err := DB.Query(`
+	return queryFriendships(`
 		SELECT f.recipient_id, u.id, u.username, f.status
 		FROM friendships f
 		JOIN users u ON f.requester_id = u.id
 		WHERE f.recipient_id = ? AND f.status = ?
 		ORDER BY f.created_at DESC
 	`, userID, friendsCodePending)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var friendships []domain.Friendship
-	for rows.Next() {
-		var f domain.Friendship
-		if err := rows.Scan(&f.UserID, &f.FriendID, &f.Username, &f.Status); err != nil {
-			return nil, err
-		}
-		friendships = append(friendships, f)
-	}
-	return friendships, nil
 }
 
 func GetOutgoingRequests(userID int) ([]domain.Friendship, error) {
-	rows, err := DB.Query(`
+	return queryFriendships(`
 		SELECT f.requester_id, u.id, u.username, f.status
 		FROM friendships f
 		JOIN users u ON f.recipient_id = u.id
 		WHERE f.requester_id = ? AND f.status = ?
 		ORDER BY f.created_at DESC
 	`, userID, friendsCodePending)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var friendships []domain.Friendship
-	for rows.Next() {
-		var f domain.Friendship
-		if err := rows.Scan(&f.UserID, &f.FriendID, &f.Username, &f.Status); err != nil {
-			return nil, err
-		}
-		friendships = append(friendships, f)
-	}
-	return friendships, nil
 }
 
 func GetFriends(userID int) ([]domain.Friendship, error) {
-	rows, err := DB.Query(`
-		SELECT u.id, u.username
+	return queryFriendships(`
+		SELECT ?, u.id, u.username, f.status
 		FROM friendships f
 		JOIN users u ON (
 			(f.requester_id = ? AND f.recipient_id = u.id) OR
@@ -126,44 +120,17 @@ func GetFriends(userID int) ([]domain.Friendship, error) {
 		)
 		WHERE f.status = ?
 		ORDER BY u.username
-	`, userID, userID, friendsCodeAccepted)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var friendships []domain.Friendship
-	for rows.Next() {
-		var f domain.Friendship
-		if err := rows.Scan(&f.FriendID, &f.Username); err != nil {
-			return nil, err
-		}
-		f.Status = friendsCodeAccepted
-		friendships = append(friendships, f)
-	}
-	return friendships, nil
+	`, userID, userID, userID, friendsCodeAccepted)
 }
 
 func GetBlockedUsers(userID int) ([]domain.Friendship, error) {
-	rows, err := DB.Query(`
+	return queryFriendships(`
 		SELECT f.requester_id, u.id, u.username, f.status
 		FROM friendships f
 		JOIN users u ON f.recipient_id = u.id
 		WHERE f.requester_id = ? AND f.status = ?
 		ORDER BY f.created_at DESC
 	`, userID, friendsCodeBlocked)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var friendships []domain.Friendship
-	for rows.Next() {
-		var f domain.Friendship
-		if err := rows.Scan(&f.UserID, &f.FriendID, &f.Username, &f.Status); err != nil {
-			return nil, err
-		}
-		friendships = append(friendships, f)
-	}
-	return friendships, nil
 }
 
 /*
