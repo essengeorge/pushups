@@ -5,12 +5,12 @@ SERVICE_NAME=pushups.service
 .PHONY: build update restart status logs
 
 build:
-	@echo "--- Сборка проекта... ---"
+	@echo "--- Building... ---"
 	go build -o $(BINARY_PATH) .
 	@echo "Готово: $(BINARY_PATH)"
 
 restart:
-	@echo "--- Перезапуск сервиса $(SERVICE_NAME)... ---"
+	@echo "--- Restarting service $(SERVICE_NAME)... ---"
 	sudo systemctl restart $(SERVICE_NAME)
 	@systemctl status $(SERVICE_NAME) --no-pager
 
@@ -21,7 +21,7 @@ logs:
 	journalctl -u $(SERVICE_NAME) -f
 
 update:
-	@echo "--- Обновление кода из Git... ---"
+	@echo "--- Pulling code from Git... ---"
 	git pull origin main
 	$(MAKE) build
 	$(MAKE) restart
