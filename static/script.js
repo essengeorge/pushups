@@ -1,3 +1,4 @@
+// bebebe
 const API_URL = 'https://pushups.gveserver.ru';
 let chart = null;
 let allStats = [];
